@@ -91,7 +91,16 @@ func (e *node) inputHeight(cw float32) float32 {
 		return float32(max(len(ed.buf.paras), 3)) * line
 	}
 	l := ed.shapeInput(e.inputParams(0))
-	return l.Lines[0].Height
+	h := l.Lines[0].Height
+	if ed.placeholder != "" && !ed.multiline {
+		// The placeholder's line can be taller than the empty buffer's: a
+		// fallback font (CJK against a Latin interface font) drops it
+		// below the box. As high as either line, so it centers itself.
+		if pl := textSystem().Layout(e.placeholderParams(0)); len(pl.Lines) > 0 {
+			h = max(h, pl.Lines[0].Height)
+		}
+	}
+	return h
 }
 
 func (e *node) layoutInput(cw, ch float32) {

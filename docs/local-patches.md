@@ -28,7 +28,7 @@ upstream/main ──ff-only──> main（镜像）        fix/cjk-placeholder-c
 
 | 主题分支 | 内容 | 为什么桌面需要 | 上游状态 |
 |---|---|---|---|
-| `fix/cjk-placeholder-centering` | `ui/editor_layout.go` 的 `paintInput`：空输入框的 placeholder 按其自身布局的行高在内容框垂直居中（单行输入；multiline 保持原逻辑） | Linux/Pango 下纯中文文本经 fontconfig 回退到 CJK 字体（如 Noto Sans CJK），行框比拉丁界面字体（如 Ubuntu Sans）高 ~3px；原实现用空文本（纯拉丁字体）算出的顶部坐标定位这份更高的 CJK 布局，中文占位文字整体下沉 ~2px，与输入框图标错位。英文/数字无回退不受影响 | 未提 PR；已实测复现（`Metrics` 对比：Ubuntu Sans EN 17 / CJK 20）并用像素探针验证修复。上游若以其他写法修复，本主题作废并删除 |
+| `fix/cjk-placeholder-centering` | `ui/editor_layout.go` 两处：`inputHeight` 让单行输入框的高度把占位文字的行高也算进去（取两者较大者）；`paintInput` 让 placeholder 按其自身行高在内容框垂直居中 | Linux/Pango 下纯中文文本经 fontconfig 回退到 CJK 字体（如 Noto Sans CJK），行框比拉丁界面字体（如 Ubuntu Sans）高 ~3px。原实现只用空文本（纯拉丁字体）的行高定输入框高度和占位顶部，CJK 占位行框（20px）装进拉丁行框（17px）放不下，整体下沉 ~2px，与输入框图标错位；仅居中而不同时补高度会被 `(17-20)/2 < 0` 钳到 0，两处缺一不可。英文/数字无回退不受影响 | 未提 PR；已实测复现（`Metrics` 对比：Ubuntu Sans EN 17 / CJK 20）。上游若以其他写法修复，本主题作废并删除 |
 
 ## 已知与本 fork 无关的测试失败
 

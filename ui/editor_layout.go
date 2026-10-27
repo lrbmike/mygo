@@ -167,8 +167,14 @@ func (e *node) paintInput(p *Painter) {
 	ts := e.resolvedText()
 	if ed.buf.n == 0 && ed.compose == "" && ed.placeholder != "" {
 		pl := textSystem().Layout(e.placeholderParams(box.W))
-		// The placeholder aligns itself in the content box, as its layout has the box's width.
-		p.textLayout(pl, e.x+e.contentX(), oy, t.TextMuted, ts, nil)
+		// The placeholder centers itself in the content box by its own line
+		// height, as the typed line does: a fallback font's taller line
+		// (CJK against a Latin interface font) must not drop below it.
+		py := oy
+		if ed.area == nil && len(pl.Lines) > 0 {
+			py = box.Y + max((box.H-pl.Lines[0].Height)/2, 0)
+		}
+		p.textLayout(pl, e.x+e.contentX(), py, t.TextMuted, ts, nil)
 	}
 	if ed.area != nil {
 		ed.area.paint(e, p, e.x+ed.originX, e.y+ed.originY)

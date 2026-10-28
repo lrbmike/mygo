@@ -3,20 +3,19 @@
 本 fork 服务于 calico-studio（`lrbmike/calico-studio`）等本地依赖开发模式：
 桌面项目通过 `go mod replace` 引用本仓库检出，`main` 分支只做上游
 （`egoist/mygo`）的镜像，**永不承载改动**；所有为桌面需求做的修改都走
-`fix/*` 主题分支。
+`fix/*` 主题分支，再由主题分支进入集成面 `local`。
 
 ## 分支拓扑
 
 ```
-upstream/main ──ff-only──> main（镜像）        fix/cjk-placeholder-centering
-                          └──cherry-pick──> 其余 fix/* 主题分支（单个改动）
+upstream/main ──ff-only──> main（镜像）        local（项目 replace 的稳定面）
+                          └──cherry-pick──> fix/* 主题分支（单个改动）
 ```
 
-**主 checkout 常驻在项目实际编译的分支上**：`replace` 认目录不认分支，桌面项目
-读的就是 `~/workspaces/mine/mygo` 当前检出的内容。目前只有一个补丁，所以
-`fix/cjk-placeholder-centering` 同时充当主题分支与集成面；**一旦出现第二个主题**，
-就新建 `local`（`main` + 各 `fix/*` cherry-pick）作为集成面，把主 checkout 迁过去，
-各 `fix/*` 只作主题存档——否则主 checkout 停在某个主题上，别的主题的修复就全丢了。
+**主 checkout 常驻 `local`**：`replace` 认目录不认分支，桌面项目读的就是
+`~/workspaces/mine/mygo` 当前检出的内容。停在 `main` 会丢掉全部补丁（中文占位
+下沉重新出现），停在某个 `fix/*` 上会丢掉别的主题。
+
 写主题分支时用 worktree，别动主 checkout：
 
 ```sh
@@ -48,10 +47,14 @@ git push -u origin fix/<主题>
 1. **先对齐上游再切分支**：
 
    ```sh
+   git remote add upstream https://github.com/egoist/mygo.git  # 只配一次
+   git fetch upstream
    git checkout main && git merge --ff-only upstream/main
-   git log --oneline main..upstream/main   # 必须为空
+   git checkout local && git merge main
+   git log --oneline local..upstream/main   # 必须为空
    ```
 
+   本 fork 目前只配了 `origin`（`lrbmike/mygo`），`upstream` 需要按上面第一行补。
    在落后的上游上写补丁，cherry-pick 只按文本判断冲突：上游改了同一段逻辑但行
    位置错开时，它会"干净通过"，语义却是错的。
 

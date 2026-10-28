@@ -136,3 +136,12 @@ Windows GUI tests need Windows with the WebView2 Runtime (a GitHub Actions
   sleeping; measure work by counts, not durations. A test that can time
   out while the code is right has a race to fix, in the test or the
   product, not a timeout to raise or a rerun to hide behind.
+
+## Local fork (this checkout)
+
+This checkout serves the user's desktop applications (Calico Studio) through
+`go mod replace`. `main` mirrors upstream and never carries changes; patches are
+cherry-picked into `local`, which every project compiles against — keep this
+checkout on `local`. Read [docs/local-patches.md](docs/local-patches.md) before changing code:
+patches must be optional (zero value keeps the old behaviour), must not change
+shared defaults, and project-only logic stays in the app.
